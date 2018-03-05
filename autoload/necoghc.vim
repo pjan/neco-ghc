@@ -221,9 +221,6 @@ function! necoghc#update_current_buffer_completion_keywords_with_lushtags() abor
 endfunction "}}}
 
 function! necoghc#get_complete_words(cur_keyword_pos, cur_keyword_str) abort "{{{
-  if get(g:, 'necoghc_trace', 0)
-    echomsg "Completer called"
-  endif
   let l:col = col('.')-1
   " HACK: When invoked from Vim, col('.') returns the position returned by the
   " omnifunc in findstart phase.
@@ -255,17 +252,11 @@ function! necoghc#get_complete_words(cur_keyword_pos, cur_keyword_str) abort "{{
 
   let [nothing, just_list] = s:multiline_import(l:line, 'list')
   if !nothing
-    if get(g:, 'necoghc_trace', 0)
-      echomsg "Multiline import >>"
-    endif
     return s:filter(just_list, l:cur_keyword_str, 0, l:need_filter)
   endif
 
   if l:line =~# '^import\>.\{-}('
     let l:mod = matchstr(l:line, '^import\s\+\%(qualified\s\+\)\?\zs[^ (]\+')
-    if get(g:, 'necoghc_trace', 0)
-      echomsg printf("Importing a function from %s", l:mod)
-    endif
     for [l:sym, l:dict] in items(necoghc#browse(l:mod))
       call add(l:list, { 'word': l:sym, 'menu': s:to_desc(l:mod . '.' . l:sym, l:dict)})
     endfor
@@ -306,55 +297,18 @@ function! necoghc#get_complete_words(cur_keyword_pos, cur_keyword_str) abort "{{
     let l:idx = matchend(l:cur_keyword_str, '^.*\.')
     let l:qual = l:cur_keyword_str[0 : l:idx-2]
     let l:name = l:cur_keyword_str[l:idx :]
-    if get(g:, 'necoghc_trace', 0)
-      echomsg "Qualified completion: " . l:qual
-    endif
+
     for [l:mod, l:opts] in items(necoghc#get_modules())
       if l:mod == l:qual || (has_key(l:opts, 'as') && l:opts.as == l:qual)
-        if get(g:, 'necoghc_trace', 0)
-          echomsg "  Hit module " . l:mod . "{"
-        endif
         for [l:sym, l:dict] in items(necoghc#browse(l:mod))
           call add(l:list, { 'word': l:qual . '.' . l:sym, 'menu': s:to_desc(l:mod . '.' . l:sym, l:dict) })
-          if get(g:, 'necoghc_trace', 0)
-            echomsg "    " . l:sym
-          endif
         endfor
-        if get(g:, 'necoghc_trace', 0)
-          echomsg "  }"
-        endif
       endif
     endfor
     if exists('b:necoghc_buffer_function_cache')
-      if get(g:, 'necoghc_trace', 0)
-        echomsg "  Added a buffer function cache {"
-        for l:sym in b:necoghc_buffer_function_cache
-          echomsg "    " . l:sym
-        endfor
-        echomsg "  }"
-      endif
-      let l:list = l:list + b:necoghc_buffer_module_cache
-    endif
-  elseif l:cur_keyword_str =~# '^[A-Z]'
-    if exists('b:necoghc_buffer_function_cache')
-      if get(g:, 'necoghc_trace', 0)
-        echomsg "  Added a type const cache {"
-        for l:sym in b:necoghc_buffer_typeconst_cache
-          echomsg "    " . l:sym
-        endfor
-        echomsg "  }"
-        echomsg "  Added a buffer function cache {"
-        for l:sym in b:necoghc_buffer_function_cache
-          echomsg "    " . l:sym
-        endfor
-        echomsg "  }"
-      endif
       let l:list = l:list + b:necoghc_buffer_typeconst_cache + b:necoghc_buffer_module_cache
     endif
   else
-    if get(g:, 'necoghc_trace', 0)
-      echomsg "  Other caess"
-    endif
     for [l:mod, l:opts] in items(necoghc#get_modules())
       if !l:opts.qualified || l:opts.export
         for [l:sym, l:dict] in items(necoghc#browse(l:mod))
@@ -363,22 +317,12 @@ function! necoghc#get_complete_words(cur_keyword_pos, cur_keyword_str) abort "{{
       endif
     endfor
     if !exists('b:necoghc_buffer_function_cache')
-      if get(g:, 'necoghc_trace', 0)
-        echomsg "  Added a buffer function cache {"
-        for l:sym in b:necoghc_buffer_function_cache
-          echomsg "    " . l:sym
-        endfor
-        echomsg "  }"
-      endif
       let l:list = l:list + b:necoghc_buffer_typeconst_cache + b:necoghc_buffer_module_cache
       call necoghc#update_current_buffer_completion_keywords_with_lushtags()
     endif
     let l:list = l:list + b:necoghc_buffer_function_cache
   endif
 
-  if get(g:, 'necoghc_trace', 0)
-    echomsg "Listing Done"
-  endif
   return s:filter(l:list, l:cur_keyword_str, l:need_prefix_filter,
         \         l:need_filter)
 endfunction "}}}
