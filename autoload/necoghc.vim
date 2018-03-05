@@ -202,8 +202,8 @@ function! necoghc#update_current_buffer_completion_keywords_with_lushtags() abor
         call add(l:ltclist, { 'word': l:ps[0], 'menu': '<ctr> (noinfo)'})
       endif
     elseif l:mt ==# 'F'
-      if 6 <= len(l:ps)
-        call add(l:llist, { 'word': l:ps[0], 'menu': '<fld> ' . l:ps[5]})
+      if 7 <= len(l:ps)
+        call add(l:llist, { 'word': l:ps[0], 'menu': '<fld> ' . l:ps[5][12:-1] . ' -> ' . l:ps[6][11:-2]})
       else
         call add(l:llist, { 'word': l:ps[0], 'menu': '<fld> (noinfo)'})
       endif
